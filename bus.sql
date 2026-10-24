@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS users (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50),
+  email VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS buses (
+  busID INT NOT NULL PRIMARY KEY,
+  busNumber INT,
+  totalSeats INT,
+  availableSeats INT
+);
+
+CREATE TABLE IF NOT EXISTS bookings (
+  BookingId INT NOT NULL PRIMARY KEY,
+  seatNumber INT
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+  PaymentID INT NOT NULL PRIMARY KEY,
+  paymentStatus VARCHAR(50)
+);
