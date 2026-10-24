@@ -3,14 +3,17 @@ const { Bus } = require('../models');
 
 const addBus = async (req, res) => {
   const { busID, busNumber, totalSeats, availableSeats } = req.body || {};
+  const normalizedBusNumber =
+    typeof busNumber === 'string' || Number.isInteger(busNumber)
+      ? String(busNumber).trim()
+      : '';
 
   if (
-    !Number.isInteger(busID) ||
-    !Number.isInteger(busNumber) ||
+    (busID !== undefined && (!Number.isInteger(busID) || busID < 1)) ||
+    !normalizedBusNumber ||
+    normalizedBusNumber.length > 20 ||
     !Number.isInteger(totalSeats) ||
     !Number.isInteger(availableSeats) ||
-    busID < 1 ||
-    busNumber < 1 ||
     totalSeats < 1 ||
     availableSeats < 0 ||
     availableSeats > totalSeats
@@ -19,9 +22,15 @@ const addBus = async (req, res) => {
   }
 
   try {
-    await Bus.create({ busID, busNumber, totalSeats, availableSeats });
+    const bus = await Bus.create({
+      ...(busID === undefined ? {} : { busID }),
+      busNumber: normalizedBusNumber,
+      totalSeats,
+      availableSeats,
+    });
     return res.status(201).json({
-      message: `Bus ${busNumber} was added successfully.`,
+      busID: bus.busID,
+      message: `Bus ${normalizedBusNumber} was added successfully.`,
     });
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
@@ -30,6 +39,42 @@ const addBus = async (req, res) => {
 
     console.error('Error adding bus:', error);
     return res.status(500).send('Error adding bus.');
+  }
+};
+
+const getBusBookings = async (req, res) => {
+  const busId = Number(req.params.id);
+
+  if (!Number.isInteger(busId) || busId < 1) {
+    return res.status(400).send('Please provide a valid bus ID.');
+  }
+
+  try {
+    const bus = await Bus.findByPk(busId, {
+      attributes: ['busID'],
+      include: [
+        {
+          association: 'bookings',
+          attributes: ['BookingId', 'seatNumber'],
+          include: [{ association: 'user', attributes: ['name', 'email'] }],
+        },
+      ],
+    });
+
+    if (!bus) {
+      return res.status(404).send('Bus not found.');
+    }
+
+    return res.status(200).json(
+      bus.bookings.map(({ BookingId, seatNumber, user }) => ({
+        id: BookingId,
+        seatNumber,
+        user,
+      })),
+    );
+  } catch (error) {
+    console.error('Error getting bus bookings:', error);
+    return res.status(500).send('Error getting bus bookings.');
   }
 };
 
@@ -57,5 +102,6 @@ const getAvailableBuses = async (req, res) => {
 
 module.exports = {
   addBus,
+  getBusBookings,
   getAvailableBuses,
 };

@@ -5,15 +5,19 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS buses (
-  busID INT NOT NULL PRIMARY KEY,
-  busNumber INT,
-  totalSeats INT,
-  availableSeats INT
+  busID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  busNumber VARCHAR(20) NOT NULL,
+  totalSeats INT NOT NULL,
+  availableSeats INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS bookings (
-  BookingId INT NOT NULL PRIMARY KEY,
-  seatNumber INT
+  BookingId INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  seatNumber INT NOT NULL,
+  userId INT NOT NULL,
+  busId INT NOT NULL,
+  CONSTRAINT fk_bookings_user FOREIGN KEY (userId) REFERENCES users(id),
+  CONSTRAINT fk_bookings_bus FOREIGN KEY (busId) REFERENCES buses(busID)
 );
 
 CREATE TABLE IF NOT EXISTS payments (

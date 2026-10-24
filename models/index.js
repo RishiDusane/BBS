@@ -1,3 +1,5 @@
+require('dotenv').config({ quiet: true });
+
 const { Sequelize, DataTypes } = require('sequelize');
 
 const sequelize = new Sequelize(
@@ -41,9 +43,10 @@ const Bus = sequelize.define(
     busID: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      autoIncrement: true,
     },
     busNumber: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(20),
       allowNull: false,
     },
     totalSeats: {
@@ -67,8 +70,17 @@ const Booking = sequelize.define(
     BookingId: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      autoIncrement: true,
     },
     seatNumber: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    busId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
@@ -78,6 +90,11 @@ const Booking = sequelize.define(
     timestamps: false,
   },
 );
+
+User.hasMany(Booking, { as: 'bookings', foreignKey: 'userId' });
+Booking.belongsTo(User, { as: 'user', foreignKey: 'userId' });
+Bus.hasMany(Booking, { as: 'bookings', foreignKey: 'busId', sourceKey: 'busID' });
+Booking.belongsTo(Bus, { as: 'bus', foreignKey: 'busId', targetKey: 'busID' });
 
 const Payment = sequelize.define(
   'Payment',

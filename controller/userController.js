@@ -34,7 +34,44 @@ const getUsers = async (req, res) => {
   }
 };
 
+const getUserBookings = async (req, res) => {
+  const userId = Number(req.params.id);
+
+  if (!Number.isInteger(userId) || userId < 1) {
+    return res.status(400).send('Please provide a valid user ID.');
+  }
+
+  try {
+    const user = await User.findByPk(userId, {
+      attributes: ['id'],
+      include: [
+        {
+          association: 'bookings',
+          attributes: ['BookingId', 'seatNumber'],
+          include: [{ association: 'bus', attributes: ['busNumber'] }],
+        },
+      ],
+    });
+
+    if (!user) {
+      return res.status(404).send('User not found.');
+    }
+
+    return res.status(200).json(
+      user.bookings.map(({ BookingId, seatNumber, bus }) => ({
+        id: BookingId,
+        seatNumber,
+        bus,
+      })),
+    );
+  } catch (error) {
+    console.error('Error getting user bookings:', error);
+    return res.status(500).send('Error getting user bookings.');
+  }
+};
+
 module.exports = {
   addUser,
   getUsers,
+  getUserBookings,
 };
